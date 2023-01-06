@@ -1,0 +1,110 @@
+.head {
+    /* background-color: #020202; */
+    width: 100%;
+    height: 50vh;
+    padding-top: 2rem;
+}
+
+.topBar {
+    display: flex;
+}
+
+.logoName {
+    display: flex;
+    flex-direction: column;
+    height: 80px;
+    justify-content: center;
+}
+
+.logoName1 {
+    color: #95A1F1;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 42px;
+    /* margin-bottom: 5px; */
+}
+
+.logoName2 {
+    color: #b3b8da;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    /* margin-top: 5px; */
+}
+
+.heading1 {
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 32px;
+    margin-top: 100px;
+    text-align: center;
+}
+
+.inputContainer {
+    margin-top: 30px;
+    /* background-color: white; */
+    padding: 0.7rem;
+    border-radius: 1rem;
+    width: 90%;
+    /* max-width: 500px; */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.dimension-container {
+    display: grid;
+    grid-template-rows: auto;
+    gap: 10px;
+}
+
+.outputContainer {
+    margin-top: 30px;
+    padding: 0.7rem;
+    border-radius: 1rem;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.input {
+    border: none;
+    outline: none;
+    height: 100%;
+    width: 70%;
+    background-color: #ffffff;
+    padding: 10px;
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+    border: 0.5px solid #1d9bf0;
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background-color: #1d9bf0;
+    padding: 0.7rem;
+    border-radius: 0.7rem;
+    cursor: pointer;
+
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    min-height: 30px;
+    min-width: 150px;
+}
+
+.button:hover {
+    background-color: #0a558a;
+}
