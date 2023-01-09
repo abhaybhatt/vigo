@@ -11,9 +11,28 @@ const HeroYT = () => {
     const [videos, setVideos] = useState([])
     const [audios, setAudios] = useState([])
 
+
     React.useEffect(() => {
         loadFormats()
     }, [videoData.data])
+
+    const getId = (url) => {
+        let videoID = url.split('v=')[1]
+        if (videoID === undefined) {
+            const arr = link.split("/")
+            const idx = arr.lastIndexOf("shorts")
+            if (idx === -1) {
+                alert("invalid URL")
+                return
+            }
+            videoID = arr[idx + 1]
+        }
+        if (videoID === undefined) {
+            alert("invalid URL")
+            return
+        }
+        return videoID
+    }
 
     const loadFormats = async () => {
         if (videoData.data !== null && videoData.data.formats.length > 0) {
@@ -24,11 +43,12 @@ const HeroYT = () => {
                 await videoData.data.formats.forEach((video, idx) => {
                     if (video.mimeType.substr(0, 9) === "video/mp4") {
                         let vidIdx = dimensions.findIndex((dimension) => dimension === video.qualityLabel)
-                        if (vidIdx === -1) {
+                        if (vidIdx === -1 && video.hasAudio === true) {
                             data.push({
                                 url: video.url,
                                 dimension: video.qualityLabel,
-                                itag: video.itag
+                                itag: video.itag,
+                                audio: video.hasAudio
                             })
                             dimensions.push(video.qualityLabel)
                         } else {
@@ -36,13 +56,13 @@ const HeroYT = () => {
                                 data[vidIdx] = {
                                     url: video.url,
                                     dimension: video.qualityLabel,
-                                    itag: video.itag
+                                    itag: video.itag,
+                                    audio: video.hasAudio
                                 }
                             }
                         }
                     }
                 })
-                console.info('data', data)
                 setVideos(data)
             } else if (type === 'audio') {
                 const data = []
@@ -99,17 +119,18 @@ const HeroYT = () => {
     const downloadVideo = async (type) => {
         setLoading(true)
         setType(type)
-        await fetch('http://localhost:8000/api/yt', {
+        let videoID = getId(link)
+        if (videoID === undefined) return
+        await fetch('https://vidownlive.com/api/yt', {
             method: "post",
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ link: link })
+            body: JSON.stringify({ videoID: videoID })
         }).then(res => res.json()).then(async (obj) => {
             if (obj.found === true) {
                 setVideoData({ data: obj.data, found: true, title: obj.title })
-                // await loadFormats()
                 setLoading(false)
             } else {
                 alert("invalid url")
@@ -125,12 +146,8 @@ const HeroYT = () => {
     }
 
     const downloadYoutubeVideo = async (label) => {
-        if (type === 'video') {
-            window.open(`http://localhost:8000/api/yt-download?url=${link}&label=${label}&title=${videoData.title}&type=video`);
-        } else if (type === 'audio') {
-            window.open(`http://localhost:8000/api/yt-download?url=${link}&label=${label}&title=${videoData.title}&type=audio`);
-        }
-
+        const url = `https://www.youtube.com/watch?v=${getId(link)}`
+        window.open(`https://vidownlive.com/api/yt-download?url=${url}&label=${label}&title=${videoData.title}&type=${type}`)
     }
     return (
         <>
@@ -139,19 +156,19 @@ const HeroYT = () => {
                     <div className={'inputContainer'}>
                         <input value={link} onChange={(e) => setLink(e.target.value)} className={'input'} type={"text"} placeholder="Paste Youtube link here" />
                         <button onClick={() => downloadVideo('video')} className={'button'}>{loading ? <RadioLoader /> : 'Download'}</button>
-                        <button onClick={() => downloadVideo('audio')} className={'button'}>{loading ? <RadioLoader /> : 'Download audio'}</button>
+                        <button style={{ marginTop: '10px' }} onClick={() => downloadVideo('audio')} className={'button'}>{loading ? <RadioLoader /> : 'Download audio'}</button>
                     </div>
                 )}
                 {videoData.found === true && type === 'video' && (
                     <div className='outputContainer'>
                         <button className={'button'} onClick={() => resetSearch()} style={{ marginBottom: "20px" }}>Download another video</button>
                         <div className='dimension-container'>{videos.map((video, idx) => {
-                            return (<button key={idx} className={'button'} onClick={() => downloadYoutubeVideo(video.itag)}>{loading ? <RadioLoader /> : video.dimension}</button>)
+                            return (<button style={{ backgroundColor: video.audio === true ? '#1d9bf0' : '#72bef1' }} key={idx} className={'button'} onClick={() => downloadYoutubeVideo(video.itag)}>{loading ? <RadioLoader /> : video.dimension}</button>)
                         })}</div>
                     </div>)
                 }
                 {videoData.found === true && type === 'audio' && (
-                    <div className='outputContainer'>
+                    <div className='outputContainer' >
                         <button className={'button'} onClick={() => resetSearch()} style={{ marginBottom: "20px" }}>Download another video</button>
                         <div className='dimension-container'>{audios.map((audio, idx) => {
                             return (<button key={idx} className={'button'} onClick={() => downloadYoutubeVideo(audio.itag)}>{loading ? <RadioLoader /> : audio.dimension}</button>)
