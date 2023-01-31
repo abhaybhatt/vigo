@@ -17,21 +17,25 @@ const HeroYT = () => {
     }, [videoData.data])
 
     const getId = (url) => {
-        let videoID = url.split('v=')[1]
-        if (videoID === undefined) {
-            const arr = link.split("/")
-            const idx = arr.lastIndexOf("shorts")
-            if (idx === -1) {
-                alert("invalid URL")
-                return
+        let videoID = ""
+        try {
+            videoID = url.split('v=') //rerturns array
+            if (videoID.length >= 2) {
+                videoID = videoID[1].substring(0, 11)
+            } else {
+                const arr = url.split('/')
+                const idx = arr.lastIndexOf("shorts")
+                if (idx === -1) {
+                    alert("invalid URL")
+                    return
+                }
+                videoID = arr[idx + 1].substring(0, 11)
             }
-            videoID = arr[idx + 1]
-        }
-        if (videoID === undefined) {
+            return videoID
+        } catch {
             alert("invalid URL")
             return
         }
-        return videoID
     }
 
     const loadFormats = async () => {
@@ -120,7 +124,10 @@ const HeroYT = () => {
         setLoading(true)
         setType(type)
         let videoID = getId(link)
-        if (videoID === undefined) return
+        if (videoID === "" || videoID === undefined) {
+            setLoading(false)
+            return
+        }
         await fetch('https://vidownlive.com/api/yt', {
             method: "post",
             headers: {
@@ -137,6 +144,7 @@ const HeroYT = () => {
                 setLoading(false)
             }
         })
+        setLoading(false)
     }
     const resetSearch = () => {
         setVideoData({ data: null, found: false, title: "" })
