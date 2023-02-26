@@ -108,3 +108,59 @@
 .button:hover {
     background-color: #0a558a;
 }
+
+.yt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.yt-title {
+    margin-bottom: 15px;
+    font-size: 21px;
+    font-weight: 200;
+}
+
+.video-responsive {
+    width: 90%;
+    height: 300px;
+    overflow: hidden;
+}
+
+.video-responsive iframe {
+    height: 100%;
+    width: 100%;
+}
+
+@media screen and (min-width: 400px) {
+    .video-responsive {
+        height: 250px;
+        width: 70%;
+        overflow: hidden;
+    }
+}
+
+@media screen and (min-width: 800px) {
+    .video-responsive {
+        height: 300px;
+        width: 60%;
+        overflow: hidden;
+    }
+}
+
+.format-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    margin: 2rem 1rem;
+}
+
+/* 
+@media only screen and (min-width: 400px) {
+    .video-responsive {
+        height: 400px;
+        width: 90%;
+        overflow: hidden;
+    }
+} */

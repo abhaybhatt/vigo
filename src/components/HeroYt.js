@@ -1,13 +1,18 @@
 
 import React, { useState } from 'react'
+import YoutubeEmbed from './YoutubeEmbed'
 import './Hero.css'
 import { TailSpin } from 'react-loader-spinner'
 
 const HeroYT = () => {
     const [link, setLink] = useState('')
+    const [id, setId] = useState("")
     const [loading, setLoading] = useState(false)
     const [videoData, setVideoData] = useState({ data: null, found: false, title: "" })
     const [type, setType] = useState()
+    const [vonly, setVOnly] = useState([])
+    const [aonly, setAOnly] = useState([])
+    const [avonly, setAVOnly] = useState([])
     const [videos, setVideos] = useState([])
     const [audios, setAudios] = useState([])
 
@@ -39,62 +44,49 @@ const HeroYT = () => {
     }
 
     const loadFormats = async () => {
+        const audioDimesnion = []
+        const videoDimension = []
         if (videoData.data !== null && videoData.data.formats.length > 0) {
-            if (type === 'video') {
-                const data = []
-                const dimensions = []
+            const audioVideo = []
+            const audioOnly = []
+            const videoOnly = []
+            videoData.data.formats.forEach((video, idx) => {
+                if (video.mimeType.substr(0, 9) === "video/mp4" || video.mimeType.substr(0, 10) === "video/webm") {
+                    const hasAudio = video.hasAudio
+                    const hasVideo = video.hasVideo
+                    const qualityLabel = video.qualityLabel
+                    const itag = video.itag
+                    if (hasAudio === true && hasVideo === true) {
 
-                await videoData.data.formats.forEach((video, idx) => {
-                    if (video.mimeType.substr(0, 9) === "video/mp4") {
-                        let vidIdx = dimensions.findIndex((dimension) => dimension === video.qualityLabel)
-                        if (vidIdx === -1 && video.hasAudio === true) {
-                            data.push({
-                                url: video.url,
-                                dimension: video.qualityLabel,
-                                itag: video.itag,
-                                audio: video.hasAudio
-                            })
-                            dimensions.push(video.qualityLabel)
-                        } else {
-                            if (video.hasAudio === true) {
-                                data[vidIdx] = {
-                                    url: video.url,
-                                    dimension: video.qualityLabel,
-                                    itag: video.itag,
-                                    audio: video.hasAudio
-                                }
-                            }
-                        }
-                    }
-                })
-                setVideos(data)
-            } else if (type === 'audio') {
-                const data = []
-                const dimensions = []
-
-                await videoData.data.formats.forEach((video, idx) => {
-                    if (video.mimeType.substr(0, 10) === "audio/webm") {
-                        let vidIdx = dimensions.findIndex((dimension) => dimension === video.audioQuality)
+                        audioVideo.push({ hasAudio, hasVideo, qualityLabel, itag })
+                    } else {
+                        const vidIdx = videoDimension.indexOf(qualityLabel)
                         if (vidIdx === -1) {
-                            data.push({
-                                url: video.url,
-                                dimension: video.audioQuality,
-                                itag: video.itag
-                            })
-                            dimensions.push(video.audioQuality)
-                        } else {
-                            if (video.hasAudio === true) {
-                                data[vidIdx] = {
-                                    url: video.url,
-                                    dimension: video.audioQuality,
-                                    itag: video.itag
-                                }
-                            }
+                            videoDimension.push(qualityLabel)
+                            videoOnly.push({ hasAudio, hasVideo, qualityLabel, itag })
                         }
+
+
                     }
-                })
-                setAudios(data)
-            }
+
+                } else if (video.mimeType.substr(0, 10) === "audio/webm") {
+                    const qualityLabel = video.audioQuality
+                    let vidIdx = audioDimesnion.indexOf(qualityLabel)
+                    if (vidIdx === -1) {
+                        const hasAudio = video.hasAudio
+                        const hasVideo = video.hasVideo
+                        audioDimesnion.push(qualityLabel)
+                        const itag = video.itag
+                        audioOnly.push({ hasAudio, hasVideo, qualityLabel, itag })
+                    }
+
+                }
+
+
+            })
+            setAOnly(audioOnly)
+            setAVOnly(audioVideo)
+            setVOnly(videoOnly)
         }
     }
     const removeParametres = (dirtyLink) => {
@@ -124,11 +116,12 @@ const HeroYT = () => {
         setLoading(true)
         setType(type)
         let videoID = getId(link)
+        setId(videoID)
         if (videoID === "" || videoID === undefined) {
             setLoading(false)
             return
         }
-        await fetch('https://vidownlive.com/api/yt', {
+        await fetch('http://localhost:8000/api/yt', {
             method: "post",
             headers: {
                 'Content-Type': 'application/json',
@@ -153,36 +146,60 @@ const HeroYT = () => {
         setType('')
     }
 
-    const downloadYoutubeVideo = async (label) => {
+    const downloadYoutubeVideo = async (label, t) => {
         const url = `https://www.youtube.com/watch?v=${getId(link)}`
-        window.open(`https://vidownlive.com/api/yt-download?url=${url}&label=${label}&title=${videoData.title}&type=${type}`)
+        window.open(`http://localhost:8000/api/yt-download?url=${url}&label=${label}&title=${videoData.title}&type=${t}`)
     }
     return (
         <>
             <main className={'head'}>
-                {videoData.found === false && (
-                    <div className={'inputContainer'}>
-                        <input value={link} onChange={(e) => setLink(e.target.value)} className={'input'} type={"text"} placeholder="Paste Youtube link here" />
-                        <button onClick={() => downloadVideo('video')} className={'button'}>{loading ? <RadioLoader /> : 'Download'}</button>
-                        <button style={{ marginTop: '10px' }} onClick={() => downloadVideo('audio')} className={'button'}>{loading ? <RadioLoader /> : 'Download audio'}</button>
-                    </div>
-                )}
-                {videoData.found === true && type === 'video' && (
-                    <div className='outputContainer'>
-                        <button className={'button'} onClick={() => resetSearch()} style={{ marginBottom: "20px" }}>Download another video</button>
-                        <div className='dimension-container'>{videos.map((video, idx) => {
-                            return (<button style={{ backgroundColor: video.audio === true ? '#1d9bf0' : '#72bef1' }} key={idx} className={'button'} onClick={() => downloadYoutubeVideo(video.itag)}>{loading ? <RadioLoader /> : video.dimension}</button>)
-                        })}</div>
-                    </div>)
+                <div className={'inputContainer'}>
+                    <input value={link} onChange={(e) => setLink(e.target.value)} className={'input'} type={"text"} placeholder="Paste Youtube link here" />
+                    <button onClick={() => downloadVideo('video')} style={{ backgroundColor: 'red' }} className={'button'}>{loading ? <RadioLoader /> : 'Download'}</button>
+                </div>
+                {
+                    videoData.found === true && (
+                        <div className='yt'>
+                            <div className='yt-title'>
+                                <p>{videoData.title}</p>
+                            </div>
+                            <YoutubeEmbed embedId={id} />
+                        </div>
+                    )
                 }
-                {videoData.found === true && type === 'audio' && (
-                    <div className='outputContainer' >
-                        <button className={'button'} onClick={() => resetSearch()} style={{ marginBottom: "20px" }}>Download another video</button>
-                        <div className='dimension-container'>{audios.map((audio, idx) => {
-                            return (<button key={idx} className={'button'} onClick={() => downloadYoutubeVideo(audio.itag)}>{loading ? <RadioLoader /> : audio.dimension}</button>)
-                        })}</div>
-                    </div>)
-                }
+                <div className='format-container'>
+                    {
+                        avonly.map((video, idx) => {
+                            return (
+                                <div className='format-row'>
+                                    <div>Video + Audio</div>
+                                    <button style={{ backgroundColor: 'red' }} className='button' onClick={() => downloadYoutubeVideo(video.itag, 'video')}>{video.qualityLabel}</button>
+                                </div>
+                            )
+                        })
+                    }
+                    {
+                        vonly.map((video, idx) => {
+                            return (
+                                <div className='format-row'>
+                                    <div>Video</div>
+                                    <button style={{ backgroundColor: 'red' }} className='button' onClick={() => downloadYoutubeVideo(video.itag, 'video')}>{video.qualityLabel}</button>
+                                </div>
+                            )
+                        })
+                    }
+                    {
+                        aonly.map((video, idx) => {
+                            return (
+                                <div className='format-row'>
+                                    <div>Audio</div>
+                                    <button style={{ backgroundColor: 'red' }} className='button' onClick={() => downloadYoutubeVideo(video.itag, 'audio')}>{video.qualityLabel}</button>
+                                </div>
+                            )
+                        })
+                    }
+                </div>
+
             </main>
         </>
     )
